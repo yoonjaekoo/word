@@ -2153,7 +2153,8 @@ const WORDS = {
   },
   {
    "n": 27,
-   "en": "break into[in]",
+   "en": "break into",
+   "alt": ["break in"],
    "ko": "1. 침입하다 2. (대화에) 끼어들다"
   },
   {

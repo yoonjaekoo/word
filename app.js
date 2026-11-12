@@ -166,7 +166,7 @@ function renderStudy(app, arg) {
     <div class="study-card">
       <div class="num">DAY ${study.day} · No.${w.n}</div>
       <div class="ko">${esc(w.ko)}</div>
-      <div class="en" id="enBox">${study.revealed ? esc(w.en) : "&nbsp;"}</div>
+      <div class="en" id="enBox">${study.revealed ? esc(w.en) + (w.alt && w.alt.length ? `<span style="font-size:16px;color:#999;font-family:Malgun Gothic"> (또는 ${esc(w.alt.join(", "))})</span>` : "") : "&nbsp;"}</div>
       <div class="hint">${study.revealed ? "스페이스바: 다음 단어" : "스페이스바 또는 클릭: 정답 보기"}</div>
     </div>
 
@@ -339,7 +339,7 @@ function paintQuiz(app) {
     verdictEl.className = "verdict " + (ans.ok ? "ok" : "ng");
     verdictEl.innerHTML = ans.ok
       ? "정답!"
-      : `오답 — 정답: <span class="correct">${esc(ans.correct)}</span>`;
+      : `오답 — 정답: <span class="correct">${esc(ans.correct)}</span>${ans.alt ? `<span style="color:#999;font-size:13px"> (또는 ${esc(ans.alt.join(", "))})</span>` : ""}`;
     const cur = document.querySelector(".dots i.cur");
     if (cur) cur.className = ans.ok ? "ok" : "ng";
     const isLast = t.idx + 1 >= t.total;
@@ -352,11 +352,15 @@ function paintQuiz(app) {
     skipBtn.style.display = "none";
   };
 
+  const isCorrect = (val, word) =>
+    norm(val) === norm(word.en) ||
+    (Array.isArray(word.alt) && word.alt.some(a => norm(val) === norm(a)));
+
   const grade = () => {
     if (t.answers[t.idx]) return; // 이미 채점됨
     const val = input.value;
-    const ok = norm(val) === norm(w.en);
-    const ans = { given: val, ok, correct: w.en, ko: w.ko, day: w.day, n: w.n };
+    const ok = isCorrect(val, w);
+    const ans = { given: val, ok, correct: w.en, alt: w.alt || null, ko: w.ko, day: w.day, n: w.n };
     t.answers[t.idx] = ans;
     if (ok) markLearned(w.day, w.n);
     showGraded(ans);
@@ -372,7 +376,7 @@ function paintQuiz(app) {
   submitBtn.onclick = grade;
   skipBtn.onclick = () => {
     if (t.answers[t.idx]) return;
-    t.answers[t.idx] = { given: "", ok: false, correct: w.en, ko: w.ko, day: w.day, n: w.n, skipped: true };
+    t.answers[t.idx] = { given: "", ok: false, correct: w.en, alt: w.alt || null, ko: w.ko, day: w.day, n: w.n, skipped: true };
     if (t.idx + 1 >= t.total) { t.finished = true; saveScore(); route(); }
     else { t.idx++; paintQuiz(app); }
   };
